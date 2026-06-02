@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Income — FinSmart{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="h2 mb-1">Income History</h1>
+            <p class="text-secondary mb-0">Total Incoming Cash flow: <strong class="text-success">{{ currency_symbol }}{{ total|floatformat:2 }}</strong></p>
+        </div>
+        <a href="{% url 'income_create' %}" class="btn btn-success">
+            <i class="bi bi-plus-circle me-2"></i>Add Income
+        </a>
+    </div>
+
+    <!-- Filters Sidebar -->
+    <div class="col-lg-3">
+        <div class="card-glass h-auto">
+            <h4 class="mb-4"><i class="bi bi-funnel me-2"></i>Filter Logs</h4>
+            <form method="GET">
+                <div class="mb-3">
+                    <label class="form-label">Income Source</label>
+                    <select name="source" class="form-select">
+                        <option value="">All Sources</option>
+                        {% for code, label in source_choices %}
+                            <option value="{{ code }}" {% if request.GET.source == code %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">From Date</label>
+                    <input type="date" name="date_from" value="{{ request.GET.date_from }}" class="form-control">
+                </div>
+                <div class="mb-4">
+                    <label class="form-label">To Date</label>
+                    <input type="date" name="date_to" value="{{ request.GET.date_to }}" class="form-control">
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        Apply Filters
+                    </button>
+                    <a href="{% url 'income_list' %}" class="btn btn-outline-secondary">
+                        Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Income Data Table -->
+    <div class="col-lg-9">
+        <div class="card-glass">
+            <div class="table-responsive">
+                <table class="table table-custom mb-0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Income Source</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if incomes %}
+                            {% for income in incomes %}
+                                <tr>
+                                    <td>{{ income.date|date:"d M Y" }}</td>
+                                    <td>
+                                        <span class="badge rounded-pill bg-success-light text-success border px-3 py-2 text-capitalize">
+                                            {{ income.get_source_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ income.description|default:'—' }}</td>
+                                    <td class="text-success fw-bold">+{{ currency_symbol }}{{ income.amount }}</td>
+                                    <td class="text-end">
+                                        <div class="btn-group">
+                                            <a href="{% url 'income_update' income.pk %}" class="btn btn-sm btn-icon text-primary" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <a href="{% url 'income_delete' income.pk %}" class="btn btn-sm btn-icon text-danger" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <i class="bi bi-search fs-1 d-block mb-3"></i>
+                                    <h5>No income records found</h5>
+                                    <p class="small">Enter dynamic cash inflows to start analyzing your total savings.</p>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

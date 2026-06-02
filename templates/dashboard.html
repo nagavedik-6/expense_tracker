@@ -1,0 +1,311 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard — FinSmart{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <!-- Page title and Quick actions -->
+    <div class="col-12 d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <h1 class="h2 mb-1">Financial Dashboard</h1>
+            <p class="text-secondary mb-0">Overview of your cash flows, budgets, and savings goals</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'expense_create' %}" class="btn btn-danger d-flex align-items-center gap-2">
+                <i class="bi bi-dash-circle"></i> <span>Add Expense</span>
+            </a>
+            <a href="{% url 'income_create' %}" class="btn btn-success d-flex align-items-center gap-2">
+                <i class="bi bi-plus-circle"></i> <span>Add Income</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- 6 Dashboard Cards Grid -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4 col-xl-2">
+        <div class="card-glass">
+            <div class="card-icon-wrapper success">
+                <i class="bi bi-graph-up-arrow"></i>
+            </div>
+            <div class="card-value">{{ currency_symbol }}{{ total_income|floatformat:2 }}</div>
+            <div class="card-title-sub">Total Income</div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 col-xl-2">
+        <div class="card-glass">
+            <div class="card-icon-wrapper danger">
+                <i class="bi bi-graph-down-arrow"></i>
+            </div>
+            <div class="card-value">{{ currency_symbol }}{{ total_expenses|floatformat:2 }}</div>
+            <div class="card-title-sub">Total Expenses</div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 col-xl-2">
+        <div class="card-glass">
+            <div class="card-icon-wrapper primary">
+                <i class="bi bi-wallet2"></i>
+            </div>
+            <div class="card-value">{{ currency_symbol }}{{ balance|floatformat:2 }}</div>
+            <div class="card-title-sub">Remaining Balance</div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 col-xl-2">
+        <div class="card-glass">
+            <div class="card-icon-wrapper success">
+                <i class="bi bi-piggy-bank"></i>
+            </div>
+            <div class="card-value">{{ currency_symbol }}{{ monthly_savings|floatformat:2 }}</div>
+            <div class="card-title-sub">Monthly Savings</div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 col-xl-2">
+        <div class="card-glass">
+            <div class="card-icon-wrapper danger">
+                <i class="bi bi-calendar-day"></i>
+            </div>
+            <div class="card-value">{{ currency_symbol }}{{ today_expenses|floatformat:2 }}</div>
+            <div class="card-title-sub">Today's Expenses</div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 col-xl-2">
+        <div class="card-glass">
+            <div class="card-icon-wrapper warning">
+                <i class="bi bi-pie-chart"></i>
+            </div>
+            <div class="card-value">{{ budget_pct }}%</div>
+            <div class="card-title-sub">Budget Used</div>
+            <div class="progress mt-2">
+                <div class="progress-bar {% if budget_pct > 100 %}bg-danger{% elif budget_pct > 80 %}bg-warning{% else %}bg-success{% endif %}" role="progressbar" style="width: {{ budget_pct }}%" aria-valuenow="{{ budget_pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4 Interactive Charts Grid -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="card-glass">
+            <h4 class="mb-4">Income vs Expense</h4>
+            <div style="height: 300px;"><canvas id="incExpChart"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card-glass">
+            <h4 class="mb-4">Monthly Spending Trend</h4>
+            <div style="height: 300px;"><canvas id="spendingTrendChart"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card-glass">
+            <h4 class="mb-4">Category Wise Expense (This Month)</h4>
+            <div style="height: 300px;"><canvas id="categoryPieChart"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card-glass">
+            <h4 class="mb-4">Savings Growth</h4>
+            <div style="height: 300px;"><canvas id="savingsGrowthChart"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Transactions & Savings Goals -->
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card-glass">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="mb-0">Recent Expenses</h4>
+                <a href="{% url 'expense_list' %}" class="small text-decoration-none fw-semibold">View All</a>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-custom mb-0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Amount</th>
+                            <th>Payment</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if recent_expenses %}
+                            {% for expense in recent_expenses %}
+                                <tr>
+                                    <td>{{ expense.date|date:"d M Y" }}</td>
+                                    <td class="fw-semibold">{{ expense.title }}</td>
+                                    <td>
+                                        <span class="badge rounded-pill bg-light text-secondary border px-3 py-2">
+                                            <i class="bi {{ expense.category.icon|default:'bi-tag' }} me-1"></i> {{ expense.category.name|default:'Uncategorized' }}
+                                        </span>
+                                    </td>
+                                    <td class="text-danger fw-bold">-{{ currency_symbol }}{{ expense.amount }}</td>
+                                    <td class="text-capitalize small">{{ expense.payment_method }}</td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    <i class="bi bi-cart-x fs-3 d-block mb-2"></i> No expenses recorded yet.
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card-glass">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="mb-0">Savings Goals</h4>
+                <a href="{% url 'savings_list' %}" class="small text-decoration-none fw-semibold">View All</a>
+            </div>
+            
+            <div class="d-flex flex-column gap-4">
+                {% if savings_goals %}
+                    {% for goal in savings_goals %}
+                        <div>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-semibold">{{ goal.goal_name }}</span>
+                                <span class="small">{{ goal.completion_percentage }}%</span>
+                            </div>
+                            <div class="progress mb-2" style="height: 6px;">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ goal.completion_percentage }}%" aria-valuenow="{{ goal.completion_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center text-muted small">
+                                <span>Saved: {{ currency_symbol }}{{ goal.current_amount }}</span>
+                                <span>Target: {{ currency_symbol }}{{ goal.target_amount }}</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-piggy-bank fs-3 d-block mb-2"></i> No active savings goals.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const labelColor = isDark ? '#94a3b8' : '#64748b';
+        const gridColor = isDark ? '#1e293b' : '#e2e8f0';
+
+        // Shared config options
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: { color: labelColor, font: { family: 'Plus Jakarta Sans' } }
+                }
+            },
+            scales: {
+                x: { grid: { color: gridColor }, ticks: { color: labelColor, font: { family: 'Plus Jakarta Sans' } } },
+                y: { grid: { color: gridColor }, ticks: { color: labelColor, font: { family: 'Plus Jakarta Sans' } } }
+            }
+        };
+
+        // 1. Income vs Expense
+        new Chart(document.getElementById('incExpChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: {{ monthly_labels|safe }},
+                datasets: [
+                    {
+                        label: 'Income',
+                        data: {{ monthly_income_data|safe }},
+                        backgroundColor: '#10b981',
+                        borderRadius: 6
+                    },
+                    {
+                        label: 'Expense',
+                        data: {{ monthly_expense_data|safe }},
+                        backgroundColor: '#ef4444',
+                        borderRadius: 6
+                    }
+                ]
+            },
+            options: chartOptions
+        });
+
+        // 2. Spending Trend Line Chart
+        new Chart(document.getElementById('spendingTrendChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: {{ monthly_labels|safe }},
+                datasets: [{
+                    label: 'Spent Amount',
+                    data: {{ monthly_expense_data|safe }},
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3
+                }]
+            },
+            options: chartOptions
+        });
+
+        // 3. Category Pie Chart
+        new Chart(document.getElementById('categoryPieChart').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: {{ cat_labels|safe }},
+                datasets: [{
+                    data: {{ cat_amounts|safe }},
+                    backgroundColor: [
+                        '#6366f1', '#10b981', '#f59e0b', '#ef4444', 
+                        '#06b6d4', '#ec4899', '#8b5cf6', '#14b8a6'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { color: labelColor, font: { family: 'Plus Jakarta Sans' } }
+                    }
+                }
+            }
+        });
+
+        // 4. Savings Growth Line Chart
+        new Chart(document.getElementById('savingsGrowthChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: {{ savings_labels|safe }},
+                datasets: [{
+                    label: 'Savings Balance',
+                    data: {{ savings_data|safe }},
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3
+                }]
+            },
+            options: chartOptions
+        });
+    });
+</script>
+{% endblock %}

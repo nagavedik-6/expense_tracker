@@ -1,0 +1,20 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Databases
+*.sqlite3
+
+# Local development files / User-specific
+*-VEDIK.py
+*-VEDIK.sqlite3
+desktop.ini
+run_server.bat
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/

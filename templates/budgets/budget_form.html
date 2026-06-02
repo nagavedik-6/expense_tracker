@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Budget Planner — FinSmart{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card-glass">
+            <div class="mb-4">
+                <a href="{% url 'budget_list' %}" class="text-decoration-none text-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Budgets
+                </a>
+            </div>
+
+            <h2 class="h3 mb-4">{{ title }}</h2>
+
+            <form method="POST">
+                {% csrf_token %}
+                
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label for="id_name" class="form-label">Budget Target Name</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                            <div class="text-danger small mt-1">{{ form.name.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="id_amount" class="form-label">Budget Limit Amount</label>
+                        {{ form.amount }}
+                        {% if form.amount.errors %}
+                            <div class="text-danger small mt-1">{{ form.amount.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="id_category" class="form-label">Category</label>
+                        {{ form.category }}
+                        {% if form.category.errors %}
+                            <div class="text-danger small mt-1">{{ form.category.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="id_alert_threshold" class="form-label">Alert Trigger Threshold (%)</label>
+                        {{ form.alert_threshold }}
+                        <div class="form-text small text-muted">Warn me when spending reaches this % of budget.</div>
+                        {% if form.alert_threshold.errors %}
+                            <div class="text-danger small mt-1">{{ form.alert_threshold.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="id_month" class="form-label">Month</label>
+                        {{ form.month }}
+                        {% if form.month.errors %}
+                            <div class="text-danger small mt-1">{{ form.month.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="id_year" class="form-label">Year</label>
+                        {{ form.year }}
+                        {% if form.year.errors %}
+                            <div class="text-danger small mt-1">{{ form.year.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{% url 'budget_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">{{ btn_text }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

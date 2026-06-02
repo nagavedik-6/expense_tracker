@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} — FinSmart{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card-glass">
+            <div class="mb-4">
+                <a href="{% url 'category_list' %}" class="text-decoration-none text-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Categories
+                </a>
+            </div>
+
+            <h2 class="h3 mb-4">{{ title }}</h2>
+
+            <form method="POST">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="id_name" class="form-label">Category Name</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                        <div class="text-danger small mt-1">{{ form.name.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-4">
+                    <label for="id_icon" class="form-label">Icon Class (Bootstrap Icons)</label>
+                    {{ form.icon }}
+                    <div class="form-text text-muted small mt-1">Example: <code>bi-cart</code>, <code>bi-car-front</code>, <code>bi-tv</code>, <code>bi-activity</code></div>
+                    {% if form.icon.errors %}
+                        <div class="text-danger small mt-1">{{ form.icon.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{% url 'category_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Save Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

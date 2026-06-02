@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ request.user.profile.theme|default:'light' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Smart Expense Tracker{% endblock %}</title>
+    <meta name="description" content="Personal Finance Manager and Budget Planner">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="/static/css/style.css" rel="stylesheet">
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="{% if request.user.profile.theme == 'dark' %}dark-mode{% endif %}">
+    
+    {% if request.user.is_authenticated %}
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <i class="bi bi-wallet2 brand-icon"></i>
+            <span class="brand-name">FinSmart</span>
+        </div>
+        
+        <nav class="sidebar-menu">
+            <a href="{% url 'dashboard' %}" class="menu-item {% if request.resolver_match.url_name == 'dashboard' or request.resolver_match.url_name == 'home' %}active{% endif %}" id="nav-dashboard">
+                <i class="bi bi-grid-1x2-fill"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{% url 'expense_list' %}" class="menu-item {% if 'expense' in request.path and not 'analytics' in request.path and not 'category' in request.path and not 'recurring' in request.path %}active{% endif %}" id="nav-expenses">
+                <i class="bi bi-cash-stack"></i>
+                <span>Expenses</span>
+            </a>
+            <a href="{% url 'income_list' %}" class="menu-item {% if 'income' in request.path %}active{% endif %}" id="nav-income">
+                <i class="bi bi-graph-up-arrow"></i>
+                <span>Income</span>
+            </a>
+            <a href="{% url 'budget_list' %}" class="menu-item {% if 'budget' in request.path %}active{% endif %}" id="nav-budgets">
+                <i class="bi bi-pie-chart-fill"></i>
+                <span>Budgets</span>
+            </a>
+            <a href="{% url 'savings_list' %}" class="menu-item {% if 'savings' in request.path %}active{% endif %}" id="nav-savings">
+                <i class="bi bi-piggy-bank-fill"></i>
+                <span>Savings Goals</span>
+            </a>
+            <a href="{% url 'category_list' %}" class="menu-item {% if 'category' in request.path %}active{% endif %}" id="nav-categories">
+                <i class="bi bi-tags-fill"></i>
+                <span>Categories</span>
+            </a>
+            <a href="{% url 'recurring_list' %}" class="menu-item {% if 'recurring' in request.path %}active{% endif %}" id="nav-recurring">
+                <i class="bi bi-calendar-event-fill"></i>
+                <span>Recurring Bills</span>
+            </a>
+            <a href="{% url 'report_dashboard' %}" class="menu-item {% if 'report' in request.path %}active{% endif %}" id="nav-reports">
+                <i class="bi bi-file-earmark-bar-graph-fill"></i>
+                <span>Reports</span>
+            </a>
+            <a href="{% url 'analytics' %}" class="menu-item {% if 'analytics' in request.path %}active{% endif %}" id="nav-analytics">
+                <i class="bi bi-lightning-charge-fill"></i>
+                <span>AI Insights</span>
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="{% url 'profile' %}" class="user-profile-summary">
+                {% if request.user.profile.profile_picture %}
+                    <img src="{{ request.user.profile.profile_picture.url }}" alt="Profile" class="profile-avatar-sm">
+                {% else %}
+                    <div class="profile-avatar-placeholder-sm">{{ request.user.username|slice:":2"|upper }}</div>
+                {% endif %}
+                <div class="user-info">
+                    <span class="user-name">{{ request.user.first_name|default:request.user.username }}</span>
+                    <span class="user-role">Member</span>
+                </div>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Container -->
+    <div class="main-wrapper">
+        <!-- Top Navbar -->
+        <header class="top-navbar">
+            <div class="navbar-left">
+                <button class="btn btn-icon sidebar-toggle d-md-none" id="sidebarCollapse">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div class="navbar-search d-none d-sm-flex">
+                    <i class="bi bi-search"></i>
+                    <input type="text" placeholder="Search transactions, bills, budgets...">
+                </div>
+            </div>
+            
+            <div class="navbar-right">
+                <!-- Theme Toggle Button -->
+                <button class="btn btn-icon theme-toggle-btn" id="themeToggler" title="Toggle Light/Dark Theme">
+                    <i class="bi {% if request.user.profile.theme == 'dark' %}bi-sun-fill{% else %}bi-moon-fill{% endif %}"></i>
+                </button>
+                
+                <!-- Notification Dropdown -->
+                <div class="dropdown notification-dropdown">
+                    <button class="btn btn-icon dropdown-toggle position-relative" type="button" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-bell"></i>
+                        {% if unread_notifications_count > 0 %}
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notif-badge">
+                                {{ unread_notifications_count }}
+                            </span>
+                        {% endif %}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg" aria-labelledby="notifDropdown">
+                        <li class="dropdown-header d-flex justify-content-between align-items-center">
+                            <span>Notifications</span>
+                            <a href="{% url 'mark_all_read' %}" class="text-primary small text-decoration-none">Mark all read</a>
+                        </li>
+                        <div class="notification-list" style="max-height: 300px; overflow-y: auto;">
+                            {% if recent_notifications %}
+                                {% for notif in recent_notifications %}
+                                    <li>
+                                        <a class="dropdown-item notif-item {% if not notif.is_read %}unread{% endif %}" href="{% url 'mark_read' notif.pk %}">
+                                            <div class="notif-icon-wrapper {{ notif.notification_type }}">
+                                                <i class="bi {% if notif.notification_type == 'budget_exceeded' %}bi-exclamation-triangle-fill{% elif notif.notification_type == 'savings_complete' %}bi-trophy-fill{% else %}bi-bell-fill{% endif %}"></i>
+                                            </div>
+                                            <div class="notif-content">
+                                                <p class="notif-text">{{ notif.message }}</p>
+                                                <span class="notif-time">{{ notif.created_at|timesince }} ago</span>
+                                            </div>
+                                        </a>
+                                    </li>
+                                {% endfor %}
+                            {% else %}
+                                <li class="text-center py-4 text-muted">
+                                    <i class="bi bi-bell-slash fs-3 d-block mb-2"></i>
+                                    <span>No unread notifications</span>
+                                </li>
+                            {% endif %}
+                        </div>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-center text-primary fw-medium py-2" href="{% url 'notification_list' %}">
+                                View All Notifications
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- User Profile Dropdown -->
+                <div class="dropdown profile-dropdown">
+                    <button class="btn profile-trigger dropdown-toggle" type="button" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        {% if request.user.profile.profile_picture %}
+                            <img src="{{ request.user.profile.profile_picture.url }}" alt="Profile" class="profile-avatar-sm">
+                        {% else %}
+                            <div class="profile-avatar-placeholder-sm">{{ request.user.username|slice:":2"|upper }}</div>
+                        {% endif %}
+                        <span class="d-none d-md-inline-block ms-2">{{ request.user.first_name|default:request.user.username }}</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" aria-labelledby="profileDropdown">
+                        <li class="px-3 py-2 border-bottom">
+                            <div class="fw-bold">{{ request.user.get_full_name|default:request.user.username }}</div>
+                            <div class="text-muted small">{{ request.user.email }}</div>
+                        </li>
+                        <li><a class="dropdown-item py-2" href="{% url 'profile' %}"><i class="bi bi-person me-2"></i> My Profile</a></li>
+                        <li><a class="dropdown-item py-2" href="{% url 'change_password' %}"><i class="bi bi-shield-lock me-2"></i> Change Password</a></li>
+                        <li><a class="dropdown-item py-2" href="{% url 'report_dashboard' %}"><i class="bi bi-file-earmark-bar-graph me-2"></i> Export Data</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item py-2 text-danger" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="content-body container-fluid py-4">
+            <!-- Messages Frame -->
+            {% if messages %}
+                <div class="messages-container mb-4">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm border-0 d-flex align-items-center" role="alert">
+                            <i class="bi {% if message.tags == 'success' %}bi-check-circle-fill{% elif message.tags == 'warning' %}bi-exclamation-triangle-fill{% elif message.tags == 'danger' %}bi-x-circle-fill{% else %}bi-info-circle-fill{% endif %} me-3 fs-5"></i>
+                            <div>{{ message }}</div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    {% else %}
+    <!-- Authentication Page Master Wrapper -->
+    <div class="auth-wrapper d-flex align-items-center justify-content-center min-vh-100 py-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-10 col-lg-8 col-xl-5">
+                    {% if messages %}
+                        <div class="messages-container mb-4">
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm border-0" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    {% block auth_content %}{% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Bootstrap 5 bundle JS with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="/static/js/app.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

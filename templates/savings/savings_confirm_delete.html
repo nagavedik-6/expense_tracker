@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Goal — FinSmart{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card-glass text-center py-5">
+            <div class="text-danger mb-4">
+                <i class="bi bi-exclamation-triangle-fill" style="font-size: 64px;"></i>
+            </div>
+            
+            <h2 class="h3 mb-3">Delete Savings Goal?</h2>
+            <p class="text-secondary mb-4">Are you sure you want to delete the savings goal "<strong>{{ goal.goal_name }}</strong>"?<br>All recorded balances toward this goal will be cancelled.</p>
+            
+            <form method="POST">
+                {% csrf_token %}
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{% url 'savings_list' %}" class="btn btn-outline-secondary px-4 py-2">Cancel</a>
+                    <button type="submit" class="btn btn-danger px-4 py-2">Delete Goal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

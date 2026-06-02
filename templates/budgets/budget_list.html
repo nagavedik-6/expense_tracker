@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Budgets — FinSmart{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-12 d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <h1 class="h2 mb-1">Budgets Tracking</h1>
+            <p class="text-secondary mb-0">Define category spending targets and monitor overspending limits</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <form method="GET" class="d-flex gap-2 align-items-center">
+                <select name="month" class="form-select form-select-sm" style="width: 130px;">
+                    {% for m, label in month_choices %}
+                        <option value="{{ m }}" {% if current_month == m %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <input type="number" name="year" value="{{ current_year }}" class="form-control form-control-sm" style="width: 90px;" placeholder="Year">
+                <button type="submit" class="btn btn-sm btn-outline-primary px-3">Filter</button>
+            </form>
+            <a href="{% url 'budget_create' %}" class="btn btn-primary btn-sm px-3 py-2">
+                <i class="bi bi-plus-circle me-1"></i>Create Budget
+            </a>
+        </div>
+    </div>
+
+    <!-- Budgets Status Cards -->
+    <div class="col-12">
+        <div class="row g-4">
+            {% if budgets %}
+                {% for budget in budgets %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card-glass">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h4 class="h5 mb-1">{{ budget.name }}</h4>
+                                    <span class="badge rounded-pill bg-light text-secondary border px-3 py-1 small">
+                                        <i class="bi {{ budget.category.icon|default:'bi-tag' }} me-1"></i> {{ budget.category.name|default:'General Limit' }}
+                                    </span>
+                                </div>
+                                <div class="btn-group">
+                                    <a href="{% url 'budget_update' budget.pk %}" class="btn btn-sm btn-icon text-primary" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'budget_delete' budget.pk %}" class="btn btn-sm btn-icon text-danger" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="text-secondary small">Spent so far</span>
+                                <span class="fw-bold {% if budget.is_over_budget %}text-danger{% elif budget.is_near_limit %}text-warning{% else %}text-success{% endif %}">
+                                    {{ currency_symbol }}{{ budget.spent_amount }} / {{ currency_symbol }}{{ budget.amount }}
+                                </span>
+                            </div>
+
+                            <div class="progress mb-3" style="height: 8px;">
+                                <div class="progress-bar {% if budget.is_over_budget %}bg-danger{% elif budget.is_near_limit %}bg-warning{% else %}bg-success{% endif %}" role="progressbar" style="width: {{ budget.percentage_used }}%" aria-valuenow="{{ budget.percentage_used }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+
+                            <div class="d-flex justify-content-between text-muted small border-top pt-2">
+                                <span>Remaining: <strong>{{ currency_symbol }}{{ budget.remaining }}</strong></span>
+                                <span>{{ budget.percentage_used }}% Used</span>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12 text-center py-5 text-muted">
+                    <i class="bi bi-pie-chart fs-1 d-block mb-3"></i>
+                    <h5>No budgets created for this month</h5>
+                    <p class="small">Budgeting helps control impulse purchases. Set category spending thresholds now!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

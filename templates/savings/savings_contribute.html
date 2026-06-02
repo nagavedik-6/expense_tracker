@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Contribution — FinSmart{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card-glass shadow-lg border-0 rounded-4">
+            <div class="mb-4">
+                <a href="{% url 'savings_list' %}" class="text-decoration-none text-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Savings
+                </a>
+            </div>
+            
+            <div class="text-center mb-4">
+                <i class="bi bi-bank fs-1 text-success mb-2 d-inline-block"></i>
+                <h2 class="h4 mb-1">Add Savings Contribution</h2>
+                <p class="mb-0 text-muted">Contribute towards your goal "<strong>{{ goal.goal_name }}</strong>"</p>
+            </div>
+            
+            <form method="POST">
+                {% csrf_token %}
+                
+                <div class="p-3 bg-light rounded-3 border mb-4 text-center">
+                    <span class="text-muted small d-block mb-1">Current Goal Completion</span>
+                    <span class="fs-3 fw-bold text-success">{{ goal.completion_percentage }}%</span>
+                    <div class="progress mt-2" style="height: 6px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ goal.completion_percentage }}%" aria-valuenow="{{ goal.completion_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted small mt-2">
+                        <span>Saved: {{ currency_symbol }}{{ goal.current_amount }}</span>
+                        <span>Target: {{ currency_symbol }}{{ goal.target_amount }}</span>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="id_amount" class="form-label fw-semibold">Contribution Inflow Amount</label>
+                    {{ form.amount }}
+                    {% if form.amount.errors %}
+                        <div class="text-danger small mt-1">{{ form.amount.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <button type="submit" class="btn btn-success w-100 py-3 mb-2">
+                    <i class="bi bi-check-circle me-2"></i>Confirm Contribution
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Spending Insights — FinSmart{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <h1 class="h2 mb-1"><i class="bi bi-lightning-charge-fill text-warning me-2"></i>AI Financial Insights</h1>
+        <p class="text-secondary">Custom analytical review, category breakouts and automated saving alerts</p>
+    </div>
+</div>
+
+<!-- 4 Key Analytics Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-lg-3">
+        <div class="card-glass">
+            <div class="card-icon-wrapper danger">
+                <i class="bi bi-arrow-up-right-circle"></i>
+            </div>
+            <div class="card-value">{{ currency_symbol }}{{ total_month|floatformat:2 }}</div>
+            <div class="card-title-sub">This Month's Spending</div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3">
+        <div class="card-glass">
+            <div class="card-icon-wrapper warning">
+                <i class="bi bi-tag"></i>
+            </div>
+            <div class="card-value text-truncate" style="max-width: 100%;">
+                {% if top_category %}{{ top_category.category__name }}{% else %}None{% endif %}
+            </div>
+            <div class="card-title-sub">Top Category Spending ({% if top_category %}{{ currency_symbol }}{{ top_category.total|floatformat:2 }}{% else %}0{% endif %})</div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3">
+        <div class="card-glass">
+            <div class="card-icon-wrapper success">
+                <i class="bi bi-cash-coin"></i>
+            </div>
+            <div class="card-value">{{ savings_rate }}%</div>
+            <div class="card-title-sub">Savings Rate This Month</div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3">
+        <div class="card-glass">
+            <div class="card-icon-wrapper primary">
+                <i class="bi bi-calculator"></i>
+            </div>
+            <div class="card-value">{{ currency_symbol }}{{ avg_daily|floatformat:2 }}</div>
+            <div class="card-title-sub">Average Daily Spending</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Automated Spending Insights Panel -->
+    <div class="col-lg-6">
+        <div class="card-glass">
+            <h4 class="mb-4"><i class="bi bi-lightbulb-fill text-warning me-2"></i>Smart Spending Insights</h4>
+            <div class="d-flex flex-column gap-3">
+                {% if insights %}
+                    {% for insight in insights %}
+                        <div class="alert alert-{{ insight.type }} border-0 shadow-sm d-flex gap-3 mb-0" role="alert">
+                            <span class="fs-4"><i class="bi {{ insight.icon }}"></i></span>
+                            <div>
+                                <h6 class="alert-heading fw-bold mb-1">{{ insight.title }}</h6>
+                                <p class="mb-0 small">{{ insight.message }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-stars fs-1 d-block mb-3 text-warning"></i>
+                        <h5>Calculating Insights...</h5>
+                        <p class="small">Enter more income and expense logs to unlock smart budgeting suggestions.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Weekly Spending Trends Chart -->
+    <div class="col-lg-6">
+        <div class="card-glass">
+            <h4 class="mb-4">Weekly Spending Trend</h4>
+            <div style="height: 300px;"><canvas id="weeklyTrendChart"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Category Breakdown Table -->
+    <div class="col-md-6">
+        <div class="card-glass">
+            <h4 class="mb-4">Category Spending Details</h4>
+            <div class="table-responsive">
+                <table class="table table-custom mb-0">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Total Spent</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if category_breakdown %}
+                            {% for item in category_breakdown %}
+                                <tr>
+                                    <td class="fw-semibold">{{ item.category__name|default:'Uncategorized' }}</td>
+                                    <td class="text-danger fw-bold">-{{ currency_symbol }}{{ item.total|floatformat:2 }}</td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="2" class="text-center py-4 text-muted">No details available.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Breakdown Table -->
+    <div class="col-md-6">
+        <div class="card-glass">
+            <h4 class="mb-4">Payment Method Distribution</h4>
+            <div class="table-responsive">
+                <table class="table table-custom mb-0">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Total Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if payment_breakdown %}
+                            {% for item in payment_breakdown %}
+                                <tr>
+                                    <td class="fw-semibold text-capitalize">{{ item.payment_method }}</td>
+                                    <td class="text-danger fw-bold">-{{ currency_symbol }}{{ item.total|floatformat:2 }}</td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="2" class="text-center py-4 text-muted">No details available.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const labelColor = isDark ? '#94a3b8' : '#64748b';
+        const gridColor = isDark ? '#1e293b' : '#e2e8f0';
+
+        new Chart(document.getElementById('weeklyTrendChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: {{ weekly_labels|safe }},
+                datasets: [{
+                    label: 'Spent Amount',
+                    data: {{ weekly_data|safe }},
+                    backgroundColor: '#6366f1',
+                    borderRadius: 8,
+                    maxBarThickness: 40
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: labelColor, font: { family: 'Plus Jakarta Sans' } } },
+                    y: { grid: { color: gridColor }, ticks: { color: labelColor, font: { family: 'Plus Jakarta Sans' } } }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

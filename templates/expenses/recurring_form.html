@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} — FinSmart{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card-glass">
+            <div class="mb-4">
+                <a href="{% url 'recurring_list' %}" class="text-decoration-none text-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Recurring Bills
+                </a>
+            </div>
+
+            <h2 class="h3 mb-4">{{ title }}</h2>
+
+            <form method="POST">
+                {% csrf_token %}
+                
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label for="id_title" class="form-label">Bill Title</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <div class="text-danger small mt-1">{{ form.title.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="id_amount" class="form-label">Amount</label>
+                        {{ form.amount }}
+                        {% if form.amount.errors %}
+                            <div class="text-danger small mt-1">{{ form.amount.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="id_category" class="form-label">Category</label>
+                        {{ form.category }}
+                        {% if form.category.errors %}
+                            <div class="text-danger small mt-1">{{ form.category.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="id_payment_method" class="form-label">Payment Method</label>
+                        {{ form.payment_method }}
+                        {% if form.payment_method.errors %}
+                            <div class="text-danger small mt-1">{{ form.payment_method.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="id_frequency" class="form-label">Repeat Frequency</label>
+                        {{ form.frequency }}
+                        {% if form.frequency.errors %}
+                            <div class="text-danger small mt-1">{{ form.frequency.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="id_next_date" class="form-label">First Billing Date</label>
+                        {{ form.next_date }}
+                        {% if form.next_date.errors %}
+                            <div class="text-danger small mt-1">{{ form.next_date.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-12">
+                        <label for="id_description" class="form-label">Description (Optional)</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="text-danger small mt-1">{{ form.description.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{% url 'recurring_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Create Automation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

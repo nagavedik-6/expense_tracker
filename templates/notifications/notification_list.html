@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications — FinSmart{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card-glass">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="h3 mb-1">Notifications Hub</h2>
+                    <p class="text-secondary mb-0">You have <strong>{{ unread_count }}</strong> unread alerts</p>
+                </div>
+                {% if notifications %}
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'mark_all_read' %}" class="btn btn-outline-primary btn-sm px-3">Mark All Read</a>
+                        <a href="{% url 'clear_all_notifications' %}" class="btn btn-outline-danger btn-sm px-3">Clear All</a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="d-flex flex-column gap-3">
+                {% if notifications %}
+                    {% for notif in notifications %}
+                        <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between {% if not notif.is_read %}bg-primary-light border-primary{% else %}bg-light{% endif %}">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="notif-icon-wrapper {{ notif.notification_type }}">
+                                    <i class="bi {% if notif.notification_type == 'budget_exceeded' %}bi-exclamation-triangle-fill{% elif notif.notification_type == 'savings_complete' %}bi-trophy-fill{% else %}bi-bell-fill{% endif %} fs-5"></i>
+                                </div>
+                                <div>
+                                    <p class="mb-1 text-primary-dark {% if not notif.is_read %}fw-semibold{% endif %}">{{ notif.message }}</p>
+                                    <span class="text-muted small">{{ notif.created_at|date:"d M Y, h:i A" }} ({{ notif.created_at|timesince }} ago)</span>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex gap-1">
+                                {% if not notif.is_read %}
+                                    <a href="{% url 'mark_read' notif.pk %}" class="btn btn-sm btn-icon text-success" title="Mark as read">
+                                        <i class="bi bi-check-lg"></i>
+                                    </a>
+                                {% endif %}
+                                <a href="{% url 'delete_notification' notif.pk %}" class="btn btn-sm btn-icon text-danger" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-bell-slash fs-1 d-block mb-3"></i>
+                        <h5>No notifications yet</h5>
+                        <p class="small">Budget overspending warnings, savings achievement alerts and monthly summaries will appear here.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

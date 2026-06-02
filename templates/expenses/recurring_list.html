@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Recurring Bills — FinSmart{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="h2 mb-1">Recurring Bills & Subscriptions</h1>
+            <p class="text-secondary mb-0">Track bills that repeat automatically like Rent, Netflix, Electricity, etc.</p>
+        </div>
+        <a href="{% url 'recurring_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i>Add Recurring Expense
+        </a>
+    </div>
+
+    <div class="col-12">
+        <div class="card-glass">
+            <div class="table-responsive">
+                <table class="table table-custom mb-0">
+                    <thead>
+                        <tr>
+                            <th>Bill Title</th>
+                            <th>Category</th>
+                            <th>Amount</th>
+                            <th>Frequency</th>
+                            <th>Next Billing Date</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if recurring_expenses %}
+                            {% for bill in recurring_expenses %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">{{ bill.title }}</div>
+                                        {% if bill.description %}
+                                            <div class="small text-muted">{{ bill.description }}</div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge rounded-pill bg-light text-secondary border px-3 py-2">
+                                            <i class="bi {{ bill.category.icon|default:'bi-tag' }} me-1"></i> {{ bill.category.name|default:'Uncategorized' }}
+                                        </span>
+                                    </td>
+                                    <td class="fw-bold text-danger">{{ request.user.profile.currency_symbol }}{{ bill.amount }}</td>
+                                    <td class="text-capitalize small">{{ bill.frequency }}</td>
+                                    <td>{{ bill.next_date|date:"d M Y" }}</td>
+                                    <td>
+                                        {% if bill.is_active %}
+                                            <span class="badge bg-success-light text-success border px-3 py-2">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-warning-light text-warning border px-3 py-2">Paused</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group">
+                                            <a href="{% url 'recurring_toggle' bill.pk %}" class="btn btn-sm btn-icon {% if bill.is_active %}text-warning{% else %}text-success{% endif %}" title="{% if bill.is_active %}Pause{% else %}Resume{% endif %}">
+                                                <i class="bi {% if bill.is_active %}bi-pause-fill{% else %}bi-play-fill{% endif %}"></i>
+                                            </a>
+                                            <a href="{% url 'recurring_delete' bill.pk %}" class="btn btn-sm btn-icon text-danger" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-muted">
+                                    <i class="bi bi-calendar-event fs-1 d-block mb-3"></i>
+                                    <h5>No recurring bills defined</h5>
+                                    <p class="small">Click 'Add Recurring Expense' to auto-schedule standard transactions.</p>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
